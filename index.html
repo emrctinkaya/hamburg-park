@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Hamburg Park Bölgesi</title>
+<style>
+  :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color-scheme: light dark; }
+  body { margin:0; background:#f3f4f6; color:#111827; }
+  .wrap { max-width:620px; margin:0 auto; padding:24px 16px 40px; }
+  .card { background:white; border-radius:24px; padding:22px; box-shadow:0 10px 30px rgba(0,0,0,.08); margin-bottom:14px; }
+  h1 { font-size:28px; margin:0 0 8px; }
+  .muted { color:#6b7280; line-height:1.45; }
+  button { width:100%; border:0; border-radius:18px; padding:17px 18px; font-weight:700; font-size:18px; background:#111827; color:white; cursor:pointer; }
+  button:disabled { opacity:.55; }
+  .zone { font-size:54px; font-weight:900; letter-spacing:-2px; margin:10px 0 0; }
+  .name { font-size:22px; font-weight:700; margin-top:4px; }
+  .row { display:flex; justify-content:space-between; gap:14px; border-top:1px solid #e5e7eb; padding:12px 0; }
+  .row:first-child { border-top:0; }
+  .label { color:#6b7280; }
+  .value { font-weight:600; text-align:right; }
+  .ok { background:#ecfdf5; }
+  .warn { background:#fff7ed; }
+  .error { background:#fef2f2; }
+  .small { font-size:13px; }
+  a { color:inherit; }
+  @media (prefers-color-scheme:dark) {
+    body { background:#0b0f19; color:#f9fafb; }
+    .card { background:#151b27; }
+    .muted,.label { color:#9ca3af; }
+    .row { border-color:#374151; }
+    button { background:#f9fafb; color:#111827; }
+    .ok { background:#10251f; }
+    .warn { background:#2a2112; }
+    .error { background:#2d1518; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Hamburg Park Bölgesi</h1>
+    <div class="muted">GPS konumunu Hamburg'un resmi Bewohnerparkgebiete verisiyle karşılaştırır.</div>
+    <div style="height:16px"></div>
+    <button id="locate">📍 Konumumu Bul</button>
+  </div>
+
+  <div id="status" class="card" style="display:none"></div>
+  <div id="result"></div>
+
+  <div class="card small muted">
+    Veri kaynağı: Freie und Hansestadt Hamburg / LBV, OGC API. 
+    Bu uygulama yalnızca bölge sınırını gösterir. Park yasağı, saat, özel alt levha ve geçici düzenlemelerde sokaktaki trafik işaretleri esas alınır.
+  </div>
+</div>
+
+<script>
+const API = "https://api.hamburg.de/datasets/v1/bewohnerparkgebiete/collections/bewohnerparkgebiete/items?f=json&limit=1000";
+
+const btn = document.getElementById("locate");
+const statusEl = document.getElementById("status");
+const resultEl = document.getElementById("result");
+
+function setStatus(text, cls="") {
+  statusEl.className = "card " + cls;
+  statusEl.style.display = "block";
+  statusEl.innerHTML = text;
+}
+
+function pointInRing(point, ring) {
+  const [x,y] = point;
+  let inside = false;
+  for (let i=0, j=ring.length-1; i<ring.length; j=i++) {
+    const [xi,yi] = ring[i], [xj,yj] = ring[j];
+    const intersect = ((yi > y) !== (yj > y)) &&
+      (x < (xj-xi) * (y-yi) / ((yj-yi) || Number.EPSILON) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+function pointInPolygon(point, coords) {
+  if (!coords?.length || !pointInRing(point, coords[0])) return false;
+  for (let i=1; i<coords.length; i++) if (pointInRing(point, coords[i])) return false;
+  return true;
+}
+function contains(feature, point) {
+  const g = feature.geometry;
+  if (!g) return false;
+  if (g.type === "Polygon") return pointInPolygon(point, g.coordinates);
+  if (g.type === "MultiPolygon") return g.coordinates.some(poly => pointInPolygon(point, poly));
+  return false;
+}
+function esc(v) {
+  return String(v ?? "—").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+function zoneCard(f, lat, lon) {
+  const p = f.properties || {};
+  return `
+    <div class="card ok">
+      <div class="muted">Bulunduğun bölge</div>
+      <div class="zone">${esc(p.bwp_code)}</div>
+      <div class="name">${esc(p.bwp_name)}</div>
+    </div>
+    <div class="card">
+      <div class="row"><div class="label">Park düzeni</div><div class="value">${esc(p.bewirtschaftungsart)}</div></div>
+      <div class="row"><div class="label">Saatler</div><div class="value">${esc(p.bewirtschaftungszeit)}</div></div>
+      <div class="row"><div class="label">Azami süre</div><div class="value">${p.hoechstparkdauer ? esc(p.hoechstparkdauer) + " dk" : "—"}</div></div>
+      <div class="row"><div class="label">Ücret bölgesi</div><div class="value">${esc(p.gebuehrenzone)}</div></div>
+      <div class="row"><div class="label">GPS</div><div class="value">${lat.toFixed(6)}, ${lon.toFixed(6)}</div></div>
+    </div>`;
+}
+
+async function locate() {
+  resultEl.innerHTML = "";
+  btn.disabled = true;
+  setStatus("GPS konumu alınıyor…");
+  if (!navigator.geolocation) {
+    setStatus("Bu tarayıcı GPS konumunu desteklemiyor.", "error");
+    btn.disabled = false; return;
+  }
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    setStatus(`Konum bulundu. Resmi park bölgeleri kontrol ediliyor…<br><span class="small muted">GPS doğruluğu: yaklaşık ${Math.round(pos.coords.accuracy)} m</span>`);
+    try {
+      const res = await fetch(API, {headers: {"Accept":"application/geo+json,application/json"}});
+      if (!res.ok) throw new Error("API " + res.status);
+      const data = await res.json();
+      const matches = (data.features || []).filter(f => contains(f, [lon,lat]));
+      if (!matches.length) {
+        setStatus("Bu GPS noktası kayıtlı bir Bewohnerparkgebiet içinde görünmüyor.", "warn");
+        resultEl.innerHTML = `<div class="card"><div class="row"><div class="label">GPS</div><div class="value">${lat.toFixed(6)}, ${lon.toFixed(6)}</div></div></div>`;
+      } else {
+        setStatus(matches.length > 1 ? `Konum ${matches.length} bölgeyle eşleşiyor. Bu bir örtüşme alanı olabilir.` : "Bölge bulundu.", "ok");
+        resultEl.innerHTML = matches.map(f => zoneCard(f,lat,lon)).join("");
+      }
+    } catch (e) {
+      setStatus(`Hamburg resmi verisine ulaşılamadı.<br><span class="small">${esc(e.message)}</span>`, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  }, err => {
+    const msgs = {
+      1:"Konum izni verilmedi. Safari ayarlarından bu site için Konum → İzin Ver seç.",
+      2:"GPS konumu alınamadı.",
+      3:"Konum isteği zaman aşımına uğradı."
+    };
+    setStatus(msgs[err.code] || "Konum alınamadı.", "error");
+    btn.disabled = false;
+  }, {enableHighAccuracy:true, timeout:12000, maximumAge:15000});
+}
+btn.addEventListener("click", locate);
+</script>
+</body>
+</html>
