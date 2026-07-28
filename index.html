@@ -1,15 +1,19 @@
 <!doctype html>
-<html lang="tr">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<title>Hamburg Park Bölgesi</title>
+<title>Hamburg Parkzone</title>
 <style>
   :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color-scheme: light dark; }
   body { margin:0; background:#f3f4f6; color:#111827; }
   .wrap { max-width:620px; margin:0 auto; padding:24px 16px 40px; }
   .card { background:white; border-radius:24px; padding:22px; box-shadow:0 10px 30px rgba(0,0,0,.08); margin-bottom:14px; }
+  .topbar { display:flex; justify-content:flex-end; margin-bottom:12px; }
+  .lang { display:flex; gap:8px; background:white; padding:6px; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,.06); }
+  .lang button { width:auto; padding:8px 12px; border-radius:10px; font-size:14px; background:transparent; color:#111827; }
+  .lang button.active { background:#111827; color:white; }
   h1 { font-size:28px; margin:0 0 8px; }
   .muted { color:#6b7280; line-height:1.45; }
   button { width:100%; border:0; border-radius:18px; padding:17px 18px; font-weight:700; font-size:18px; background:#111827; color:white; cursor:pointer; }
@@ -27,10 +31,12 @@
   a { color:inherit; }
   @media (prefers-color-scheme:dark) {
     body { background:#0b0f19; color:#f9fafb; }
-    .card { background:#151b27; }
+    .card,.lang { background:#151b27; }
     .muted,.label { color:#9ca3af; }
     .row { border-color:#374151; }
     button { background:#f9fafb; color:#111827; }
+    .lang button { color:#f9fafb; }
+    .lang button.active { background:#f9fafb; color:#111827; }
     .ok { background:#10251f; }
     .warn { background:#2a2112; }
     .error { background:#2d1518; }
@@ -39,28 +45,142 @@
 </head>
 <body>
 <div class="wrap">
+  <div class="topbar">
+    <div class="lang" aria-label="Language selector">
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="tr">TR</button>
+    </div>
+  </div>
+
   <div class="card">
-    <h1>Hamburg Park Bölgesi</h1>
-    <div class="muted">GPS konumunu Hamburg'un resmi Bewohnerparkgebiete verisiyle karşılaştırır.</div>
+    <h1 id="title"></h1>
+    <div class="muted" id="subtitle"></div>
     <div style="height:16px"></div>
-    <button id="locate">📍 Konumumu Bul</button>
+    <button id="locate"></button>
   </div>
 
   <div id="status" class="card" style="display:none"></div>
   <div id="result"></div>
 
-  <div class="card small muted">
-    Veri kaynağı: Freie und Hansestadt Hamburg / LBV, OGC API. 
-    Bu uygulama yalnızca bölge sınırını gösterir. Park yasağı, saat, özel alt levha ve geçici düzenlemelerde sokaktaki trafik işaretleri esas alınır.
-  </div>
+  <div class="card small muted" id="disclaimer"></div>
 </div>
 
 <script>
 const API = "https://api.hamburg.de/datasets/v1/bewohnerparkgebiete/collections/bewohnerparkgebiete/items?f=json&limit=1000";
+const STORAGE_KEY = "hamburgParkLanguage";
+
+const I18N = {
+  de: {
+    htmlLang: "de",
+    pageTitle: "Hamburg Parkzone",
+    title: "Hamburg Parkzone",
+    subtitle: "Vergleicht deinen GPS-Standort mit den offiziellen Hamburger Bewohnerparkgebieten.",
+    locate: "📍 Standort finden",
+    source: "Datenquelle: Freie und Hansestadt Hamburg / LBV, OGC API. Diese App zeigt nur das Bewohnerparkgebiet. Verkehrszeichen vor Ort, Parkverbote, Zeiten, Zusatzschilder und vorübergehende Regelungen sind maßgeblich.",
+    yourZone: "Dein Bereich",
+    parkingRule: "Parkregelung",
+    hours: "Zeiten",
+    maxDuration: "Höchstparkdauer",
+    feeZone: "Gebührenzone",
+    minutes: "Min.",
+    locating: "GPS-Standort wird ermittelt…",
+    unsupported: "Dieser Browser unterstützt keine Standortbestimmung.",
+    checking: "Standort gefunden. Offizielle Parkgebiete werden geprüft…",
+    accuracy: "GPS-Genauigkeit: ca.",
+    meters: "m",
+    outside: "Dieser GPS-Punkt liegt offenbar in keinem registrierten Bewohnerparkgebiet.",
+    found: "Parkgebiet gefunden.",
+    multiple: n => `Der Standort liegt in ${n} Gebieten. Möglicherweise handelt es sich um einen Überlappungsbereich.`,
+    apiError: "Die offiziellen Hamburger Parkdaten konnten nicht geladen werden.",
+    denied: "Standortzugriff wurde nicht erlaubt. Aktiviere für diese Website in Safari unter Website-Einstellungen → Standort die Option „Erlauben“ oder „Fragen“.",
+    unavailable: "Der GPS-Standort konnte nicht ermittelt werden.",
+    timeout: "Die Standortabfrage hat zu lange gedauert.",
+    genericLocationError: "Standort konnte nicht ermittelt werden."
+  },
+  en: {
+    htmlLang: "en",
+    pageTitle: "Hamburg Parking Zone",
+    title: "Hamburg Parking Zone",
+    subtitle: "Compares your GPS location with Hamburg's official resident parking zones.",
+    locate: "📍 Find my location",
+    source: "Data source: Free and Hanseatic City of Hamburg / LBV, OGC API. This app only shows the resident parking zone. Local traffic signs, parking restrictions, times, additional signs and temporary rules always take precedence.",
+    yourZone: "Your zone",
+    parkingRule: "Parking rule",
+    hours: "Hours",
+    maxDuration: "Maximum duration",
+    feeZone: "Fee zone",
+    minutes: "min",
+    locating: "Getting GPS location…",
+    unsupported: "This browser does not support geolocation.",
+    checking: "Location found. Checking official parking zones…",
+    accuracy: "GPS accuracy: approx.",
+    meters: "m",
+    outside: "This GPS point does not appear to be inside a registered resident parking zone.",
+    found: "Parking zone found.",
+    multiple: n => `The location matches ${n} zones. This may be an overlap area.`,
+    apiError: "Could not access Hamburg's official parking data.",
+    denied: "Location access was not allowed. In Safari, open Website Settings → Location and choose “Allow” or “Ask” for this website.",
+    unavailable: "GPS location could not be determined.",
+    timeout: "The location request timed out.",
+    genericLocationError: "Location could not be determined."
+  },
+  tr: {
+    htmlLang: "tr",
+    pageTitle: "Hamburg Park Bölgesi",
+    title: "Hamburg Park Bölgesi",
+    subtitle: "GPS konumunu Hamburg'un resmi Bewohnerparkgebiete verisiyle karşılaştırır.",
+    locate: "📍 Konumumu Bul",
+    source: "Veri kaynağı: Freie und Hansestadt Hamburg / LBV, OGC API. Bu uygulama yalnızca bölge sınırını gösterir. Park yasağı, saat, özel alt levha ve geçici düzenlemelerde sokaktaki trafik işaretleri esas alınır.",
+    yourZone: "Bulunduğun bölge",
+    parkingRule: "Park düzeni",
+    hours: "Saatler",
+    maxDuration: "Azami süre",
+    feeZone: "Ücret bölgesi",
+    minutes: "dk",
+    locating: "GPS konumu alınıyor…",
+    unsupported: "Bu tarayıcı GPS konumunu desteklemiyor.",
+    checking: "Konum bulundu. Resmi park bölgeleri kontrol ediliyor…",
+    accuracy: "GPS doğruluğu: yaklaşık",
+    meters: "m",
+    outside: "Bu GPS noktası kayıtlı bir Bewohnerparkgebiet içinde görünmüyor.",
+    found: "Bölge bulundu.",
+    multiple: n => `Konum ${n} bölgeyle eşleşiyor. Bu bir örtüşme alanı olabilir.`,
+    apiError: "Hamburg resmi verisine ulaşılamadı.",
+    denied: "Konum izni verilmedi. Safari'de bu site için Web Sitesi Ayarları → Konum bölümünden “İzin Ver” veya “Sor” seç.",
+    unavailable: "GPS konumu alınamadı.",
+    timeout: "Konum isteği zaman aşımına uğradı.",
+    genericLocationError: "Konum alınamadı."
+  }
+};
+
+let currentLang = localStorage.getItem(STORAGE_KEY) || "de";
+if (!I18N[currentLang]) currentLang = "de";
 
 const btn = document.getElementById("locate");
 const statusEl = document.getElementById("status");
 const resultEl = document.getElementById("result");
+const titleEl = document.getElementById("title");
+const subtitleEl = document.getElementById("subtitle");
+const disclaimerEl = document.getElementById("disclaimer");
+
+function t() { return I18N[currentLang]; }
+
+function applyLanguage(lang) {
+  currentLang = I18N[lang] ? lang : "de";
+  localStorage.setItem(STORAGE_KEY, currentLang);
+  const x = t();
+  document.documentElement.lang = x.htmlLang;
+  document.title = x.pageTitle;
+  titleEl.textContent = x.title;
+  subtitleEl.textContent = x.subtitle;
+  btn.textContent = x.locate;
+  disclaimerEl.textContent = x.source;
+  document.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("active", b.dataset.lang === currentLang));
+  if (resultEl.dataset.features) renderStoredResult();
+}
+
+document.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => applyLanguage(b.dataset.lang)));
 
 function setStatus(text, cls="") {
   statusEl.className = "card " + cls;
@@ -96,60 +216,70 @@ function esc(v) {
 }
 function zoneCard(f, lat, lon) {
   const p = f.properties || {};
+  const x = t();
   return `
     <div class="card ok">
-      <div class="muted">Bulunduğun bölge</div>
+      <div class="muted">${x.yourZone}</div>
       <div class="zone">${esc(p.bwp_code)}</div>
       <div class="name">${esc(p.bwp_name)}</div>
     </div>
     <div class="card">
-      <div class="row"><div class="label">Park düzeni</div><div class="value">${esc(p.bewirtschaftungsart)}</div></div>
-      <div class="row"><div class="label">Saatler</div><div class="value">${esc(p.bewirtschaftungszeit)}</div></div>
-      <div class="row"><div class="label">Azami süre</div><div class="value">${p.hoechstparkdauer ? esc(p.hoechstparkdauer) + " dk" : "—"}</div></div>
-      <div class="row"><div class="label">Ücret bölgesi</div><div class="value">${esc(p.gebuehrenzone)}</div></div>
+      <div class="row"><div class="label">${x.parkingRule}</div><div class="value">${esc(p.bewirtschaftungsart)}</div></div>
+      <div class="row"><div class="label">${x.hours}</div><div class="value">${esc(p.bewirtschaftungszeit)}</div></div>
+      <div class="row"><div class="label">${x.maxDuration}</div><div class="value">${p.hoechstparkdauer ? esc(p.hoechstparkdauer) + " " + x.minutes : "—"}</div></div>
+      <div class="row"><div class="label">${x.feeZone}</div><div class="value">${esc(p.gebuehrenzone)}</div></div>
       <div class="row"><div class="label">GPS</div><div class="value">${lat.toFixed(6)}, ${lon.toFixed(6)}</div></div>
     </div>`;
 }
 
+function renderStoredResult() {
+  try {
+    const data = JSON.parse(resultEl.dataset.features);
+    const x = t();
+    if (data.matches.length === 0) {
+      setStatus(x.outside, "warn");
+      resultEl.innerHTML = `<div class="card"><div class="row"><div class="label">GPS</div><div class="value">${data.lat.toFixed(6)}, ${data.lon.toFixed(6)}</div></div></div>`;
+    } else {
+      setStatus(data.matches.length > 1 ? x.multiple(data.matches.length) : x.found, "ok");
+      resultEl.innerHTML = data.matches.map(f => zoneCard(f,data.lat,data.lon)).join("");
+    }
+  } catch (_) {}
+}
+
 async function locate() {
   resultEl.innerHTML = "";
+  delete resultEl.dataset.features;
   btn.disabled = true;
-  setStatus("GPS konumu alınıyor…");
+  const x = t();
+  setStatus(x.locating);
   if (!navigator.geolocation) {
-    setStatus("Bu tarayıcı GPS konumunu desteklemiyor.", "error");
+    setStatus(x.unsupported, "error");
     btn.disabled = false; return;
   }
   navigator.geolocation.getCurrentPosition(async pos => {
     const lat = pos.coords.latitude, lon = pos.coords.longitude;
-    setStatus(`Konum bulundu. Resmi park bölgeleri kontrol ediliyor…<br><span class="small muted">GPS doğruluğu: yaklaşık ${Math.round(pos.coords.accuracy)} m</span>`);
+    setStatus(`${x.checking}<br><span class="small muted">${x.accuracy} ${Math.round(pos.coords.accuracy)} ${x.meters}</span>`);
     try {
       const res = await fetch(API, {headers: {"Accept":"application/geo+json,application/json"}});
       if (!res.ok) throw new Error("API " + res.status);
       const data = await res.json();
       const matches = (data.features || []).filter(f => contains(f, [lon,lat]));
-      if (!matches.length) {
-        setStatus("Bu GPS noktası kayıtlı bir Bewohnerparkgebiet içinde görünmüyor.", "warn");
-        resultEl.innerHTML = `<div class="card"><div class="row"><div class="label">GPS</div><div class="value">${lat.toFixed(6)}, ${lon.toFixed(6)}</div></div></div>`;
-      } else {
-        setStatus(matches.length > 1 ? `Konum ${matches.length} bölgeyle eşleşiyor. Bu bir örtüşme alanı olabilir.` : "Bölge bulundu.", "ok");
-        resultEl.innerHTML = matches.map(f => zoneCard(f,lat,lon)).join("");
-      }
+      resultEl.dataset.features = JSON.stringify({matches,lat,lon});
+      renderStoredResult();
     } catch (e) {
-      setStatus(`Hamburg resmi verisine ulaşılamadı.<br><span class="small">${esc(e.message)}</span>`, "error");
+      setStatus(`${x.apiError}<br><span class="small">${esc(e.message)}</span>`, "error");
     } finally {
       btn.disabled = false;
     }
   }, err => {
-    const msgs = {
-      1:"Konum izni verilmedi. Safari ayarlarından bu site için Konum → İzin Ver seç.",
-      2:"GPS konumu alınamadı.",
-      3:"Konum isteği zaman aşımına uğradı."
-    };
-    setStatus(msgs[err.code] || "Konum alınamadı.", "error");
+    const msgs = {1:x.denied, 2:x.unavailable, 3:x.timeout};
+    setStatus(msgs[err.code] || x.genericLocationError, "error");
     btn.disabled = false;
   }, {enableHighAccuracy:true, timeout:12000, maximumAge:15000});
 }
+
 btn.addEventListener("click", locate);
+applyLanguage(currentLang);
 </script>
 </body>
 </html>
