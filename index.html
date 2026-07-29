@@ -3,168 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hamburg Park">
 <title>Hamburg Parkzone</title>
 <style>
-  :root {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
-    color-scheme: light dark;
-    --bg:#f5f7fb; --surface:#ffffff; --surface2:#f8fafc; --text:#0f172a; --muted:#64748b;
-    --line:#e2e8f0; --primary:#0f172a; --primaryText:#fff; --success:#067647; --successBg:#ecfdf3;
-    --warning:#b54708; --warningBg:#fff7ed; --danger:#b42318; --dangerBg:#fef3f2;
-    --shadow:0 12px 35px rgba(15,23,42,.08); --radius:24px;
-  }
-  * { box-sizing:border-box; }
-  body { margin:0; background:linear-gradient(180deg,#eef3f8 0,#f8fafc 240px); color:var(--text); min-height:100vh; }
-  .wrap { max-width:620px; margin:0 auto; padding:calc(14px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom)); }
-  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-  .brand { display:flex; align-items:center; gap:10px; min-width:0; }
-  .brand-icon { width:40px; height:40px; border-radius:13px; background:var(--primary); color:white; display:grid; place-items:center; box-shadow:0 8px 22px rgba(15,23,42,.16); font-size:20px; }
-  .brand-copy { min-width:0; }
-  .brand-title { font-size:16px; font-weight:800; line-height:1.15; }
-  .brand-sub { margin-top:2px; font-size:12px; color:var(--muted); }
-
-  .lang-wrap { position:relative; }
-  .lang-trigger { width:54px; height:44px; padding:0; border:1px solid var(--line); border-radius:14px; background:var(--surface); box-shadow:0 5px 18px rgba(15,23,42,.06); display:flex; align-items:center; justify-content:center; gap:5px; cursor:pointer; }
-  .lang-trigger svg.flag { width:28px; height:19px; border-radius:3px; box-shadow:0 0 0 1px rgba(15,23,42,.08); }
-  .chev { width:12px; height:12px; transition:transform .18s ease; color:var(--muted); }
-  .lang-wrap.open .chev { transform:rotate(180deg); }
-  .lang-menu { position:absolute; top:50px; right:0; z-index:20; min-width:74px; padding:7px; border:1px solid var(--line); border-radius:16px; background:var(--surface); box-shadow:0 16px 40px rgba(15,23,42,.16); display:none; }
-  .lang-wrap.open .lang-menu { display:block; }
-  .lang-option { width:100%; height:44px; padding:0; border:0; border-radius:11px; background:transparent; display:grid; place-items:center; cursor:pointer; }
-  .lang-option:hover,.lang-option:focus-visible { background:var(--surface2); }
-  .lang-option.active { background:var(--surface2); box-shadow:inset 0 0 0 1px var(--line); }
-  .lang-option svg { width:31px; height:21px; border-radius:3px; box-shadow:0 0 0 1px rgba(15,23,42,.08); }
-
-  .hero { background:var(--surface); border:1px solid rgba(226,232,240,.9); border-radius:28px; padding:24px; box-shadow:var(--shadow); overflow:hidden; position:relative; }
-  .eyebrow { display:inline-flex; align-items:center; gap:7px; background:#eef2ff; color:#3730a3; border-radius:999px; padding:7px 10px; font-size:12px; font-weight:750; margin-bottom:14px; }
-  .eyebrow-dot { width:7px; height:7px; border-radius:50%; background:#4f46e5; }
-  h1 { font-size:32px; line-height:1.08; letter-spacing:-.9px; margin:0 0 10px; }
-  .subtitle { color:var(--muted); line-height:1.5; font-size:15px; max-width:520px; }
-  .locate { width:100%; min-height:56px; border:0; border-radius:17px; padding:16px 18px; margin-top:22px; font-size:17px; font-weight:800; background:var(--primary); color:var(--primaryText); box-shadow:0 10px 24px rgba(15,23,42,.16); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:9px; }
-  .locate:active { transform:translateY(1px); }
-  .locate:disabled { opacity:.55; cursor:default; }
-
-  .status { border-radius:18px; padding:15px 16px; margin-top:14px; font-size:14px; line-height:1.45; border:1px solid var(--line); background:var(--surface); box-shadow:0 7px 22px rgba(15,23,42,.05); }
-  .status.ok { color:var(--success); background:var(--successBg); border-color:#abefc6; }
-  .status.warn { color:var(--warning); background:var(--warningBg); border-color:#fed7aa; }
-  .status.error { color:var(--danger); background:var(--dangerBg); border-color:#fecdca; }
-  .small { font-size:12px; }
-
-  .result { margin-top:14px; }
-  .zone-card { background:var(--surface); border:1px solid var(--line); border-radius:26px; padding:22px; box-shadow:var(--shadow); margin-bottom:14px; }
-  .zone-label { color:var(--muted); font-size:13px; font-weight:650; }
-  .zone { font-size:60px; font-weight:900; letter-spacing:-3px; margin-top:4px; line-height:1; }
-  .zone-name { font-size:19px; font-weight:750; margin-top:8px; }
-  .details { background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:6px 18px; box-shadow:0 8px 26px rgba(15,23,42,.05); margin-bottom:14px; }
-  .row { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; border-top:1px solid var(--line); padding:14px 0; }
-  .row:first-child { border-top:0; }
-  .label { color:var(--muted); font-size:13px; }
-  .value { font-weight:700; text-align:right; font-size:13px; overflow-wrap:anywhere; }
-
-  .disclaimer { margin-top:16px; padding:16px 4px; color:var(--muted); font-size:12px; line-height:1.5; text-align:center; }
-  .official { display:inline-flex; align-items:center; gap:5px; font-weight:700; color:var(--text); margin-bottom:5px; }
-
-  @media (max-width:380px) { h1{font-size:28px}.hero{padding:20px}.zone{font-size:52px} }
-  @media (prefers-color-scheme:dark) {
-    :root { --bg:#080d16; --surface:#111827; --surface2:#1e293b; --text:#f8fafc; --muted:#94a3b8; --line:#263244; --primary:#f8fafc; --primaryText:#0f172a; --shadow:0 14px 35px rgba(0,0,0,.24); }
-    body { background:linear-gradient(180deg,#0b1220 0,#080d16 280px); }
-    .eyebrow { background:#1e1b4b; color:#c7d2fe; }
-    .lang-trigger,.lang-menu,.hero,.zone-card,.details,.status { background:var(--surface); }
-    .status.ok { background:#09251b; border-color:#166534; color:#86efac; }
-    .status.warn { background:#2a1907; border-color:#9a3412; color:#fdba74; }
-    .status.error { background:#2b1010; border-color:#991b1b; color:#fca5a5; }
-  }
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color-scheme:light dark;--bg:#f4f7fb;--surface:#fff;--surface2:#f8fafc;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--primary:#111827;--primaryText:#fff;--accent:#4f46e5;--success:#067647;--successBg:#ecfdf3;--warning:#b54708;--warningBg:#fff7ed;--danger:#b42318;--dangerBg:#fef3f2;--shadow:0 18px 50px rgba(15,23,42,.09)}
+*{box-sizing:border-box} body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -120px,#e8eef8 0,transparent 420px),var(--bg);color:var(--text)}
+.wrap{max-width:620px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(26px + env(safe-area-inset-bottom))}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.brand{display:flex;align-items:center;gap:11px}.brand-icon{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#4f46e5,#312e81);display:grid;place-items:center;box-shadow:0 9px 24px rgba(79,70,229,.26)}.brand-icon svg{width:25px;height:25px}.brand-title{font-size:16px;font-weight:850;letter-spacing:-.2px}.brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.lang-wrap{position:relative}.lang-trigger{width:56px;height:44px;border:1px solid var(--line);border-radius:14px;background:var(--surface);display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 5px 18px rgba(15,23,42,.06);cursor:pointer}.lang-trigger svg.flag{width:29px;height:19px;border-radius:3px;box-shadow:0 0 0 1px rgba(15,23,42,.08)}.chev{width:12px;height:12px;color:var(--muted);transition:.18s}.lang-wrap.open .chev{transform:rotate(180deg)}.lang-menu{position:absolute;right:0;top:50px;z-index:30;width:70px;padding:7px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:0 18px 45px rgba(15,23,42,.18);display:none}.lang-wrap.open .lang-menu{display:block}.lang-option{width:100%;height:43px;border:0;border-radius:11px;background:transparent;display:grid;place-items:center;cursor:pointer}.lang-option:hover,.lang-option:focus-visible,.lang-option.active{background:var(--surface2)}.lang-option svg{width:31px;height:21px;border-radius:3px;box-shadow:0 0 0 1px rgba(15,23,42,.08)}
+.hero{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--surface) 0%,var(--surface) 62%,rgba(79,70,229,.035) 100%);border:1px solid var(--line);border-radius:28px;padding:25px;box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-92px;bottom:-110px;background:radial-gradient(circle,rgba(79,70,229,.12),transparent 70%);pointer-events:none}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px;font-weight:800;margin-bottom:15px}.eyebrow-dot{width:7px;height:7px;background:#4f46e5;border-radius:50%}h1{font-size:34px;line-height:1.05;letter-spacing:-1.1px;margin:0 0 11px}.subtitle{font-size:15px;line-height:1.55;color:var(--muted);max-width:500px}.locate{width:100%;min-height:58px;margin-top:23px;border:0;border-radius:18px;padding:16px 18px;background:var(--primary);color:var(--primaryText);font-size:17px;font-weight:850;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 10px 26px rgba(15,23,42,.17);cursor:pointer}.locate svg{width:20px;height:20px}.locate:active{transform:translateY(1px)}.locate:disabled{opacity:.55;cursor:default}
+.quick-info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.quick-card{background:rgba(255,255,255,.68);border:1px solid var(--line);border-radius:17px;padding:13px 14px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(10px)}.quick-icon{width:32px;height:32px;border-radius:10px;background:#eef2ff;color:#4338ca;display:grid;place-items:center;flex:0 0 auto}.quick-icon svg{width:17px;height:17px}.quick-title{font-size:12px;font-weight:800}.quick-sub{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.25}
+.status{border-radius:18px;padding:15px 16px;margin-top:14px;font-size:14px;line-height:1.45;border:1px solid var(--line);background:var(--surface);box-shadow:0 7px 22px rgba(15,23,42,.05)}.status.ok{color:var(--success);background:var(--successBg);border-color:#abefc6}.status.warn{color:var(--warning);background:var(--warningBg);border-color:#fed7aa}.status.error{color:var(--danger);background:var(--dangerBg);border-color:#fecdca}.small{font-size:12px}.result{margin-top:14px}.zone-card{background:linear-gradient(155deg,#312e81,#4f46e5);color:white;border-radius:25px;padding:22px;box-shadow:0 16px 36px rgba(79,70,229,.23);margin-bottom:12px}.zone-label{font-size:12px;font-weight:700;opacity:.82}.zone{font-size:60px;line-height:1;font-weight:950;letter-spacing:-3px;margin-top:6px}.zone-name{font-size:19px;font-weight:800;margin-top:8px}.details{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:6px 18px;box-shadow:0 8px 26px rgba(15,23,42,.05);margin-bottom:14px}.row{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;border-top:1px solid var(--line);padding:14px 0}.row:first-child{border-top:0}.label{color:var(--muted);font-size:13px}.value{font-weight:750;text-align:right;font-size:13px;overflow-wrap:anywhere}.disclaimer{margin-top:17px;padding:14px 8px 4px;color:var(--muted);font-size:11px;line-height:1.5;text-align:center}.official{display:inline-flex;align-items:center;gap:5px;font-weight:800;color:var(--text);margin-bottom:5px}
+@media(max-width:420px){h1{font-size:30px}.hero{padding:22px}.quick-info{grid-template-columns:1fr}.zone{font-size:54px}}
+@media(prefers-color-scheme:dark){:root{--bg:#070c14;--surface:#111827;--surface2:#1b2535;--text:#f8fafc;--muted:#94a3b8;--line:#273244;--primary:#f8fafc;--primaryText:#0f172a;--shadow:0 18px 48px rgba(0,0,0,.26)}body{background:radial-gradient(circle at 50% -120px,#172033 0,transparent 430px),var(--bg)}.hero{background:linear-gradient(160deg,#111827 0%,#111827 64%,#16163b 100%)}.eyebrow{background:#211d52;color:#c7d2fe}.quick-card{background:rgba(17,24,39,.78)}.quick-icon{background:#211d52;color:#c7d2fe}.status.ok{background:#09251b;border-color:#166534;color:#86efac}.status.warn{background:#2a1907;border-color:#9a3412;color:#fdba74}.status.error{background:#2b1010;border-color:#991b1b;color:#fca5a5}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="header">
-    <div class="brand">
-      <div class="brand-icon">P</div>
-      <div class="brand-copy">
-        <div class="brand-title">Hamburg Park</div>
-        <div class="brand-sub">Bewohnerparkgebiete</div>
-      </div>
-    </div>
-
-    <div class="lang-wrap" id="langWrap">
-      <button class="lang-trigger" id="langTrigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Language">
-        <span id="currentFlag"></span>
-        <svg class="chev" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="lang-menu" id="langMenu" role="menu">
-        <button class="lang-option" type="button" data-lang="de" role="menuitem" aria-label="Deutsch"></button>
-        <button class="lang-option" type="button" data-lang="en" role="menuitem" aria-label="English"></button>
-        <button class="lang-option" type="button" data-lang="tr" role="menuitem" aria-label="Türkçe"></button>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div class="eyebrow"><span class="eyebrow-dot"></span><span id="officialBadge"></span></div>
-      <h1 id="title"></h1>
-      <div class="subtitle" id="subtitle"></div>
-      <button class="locate" id="locate"><span aria-hidden="true">⌖</span><span id="locateText"></span></button>
-    </section>
-
-    <div id="status" class="status" style="display:none"></div>
-    <div id="result" class="result"></div>
-
-    <div class="disclaimer">
-      <div class="official">✓ <span id="sourceLabel"></span></div>
-      <div id="disclaimer"></div>
-    </div>
-  </main>
-</div>
-
+<header class="header">
+  <div class="brand">
+    <div class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="5" stroke="white" stroke-width="2"/><path d="M9 17V7h4.1a3.4 3.4 0 0 1 0 6.8H9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div><div class="brand-title">Hamburg Park</div><div class="brand-sub">Bewohnerparkgebiete</div></div>
+  </div>
+  <div class="lang-wrap" id="langWrap">
+    <button class="lang-trigger" id="langTrigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Language"><span id="currentFlag"></span><svg class="chev" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="lang-menu" role="menu"><button class="lang-option" type="button" data-lang="de" aria-label="Deutsch"></button><button class="lang-option" type="button" data-lang="en" aria-label="English"></button><button class="lang-option" type="button" data-lang="tr" aria-label="Türkçe"></button></div>
+  </div>
+</header>
+<main>
+<section class="hero"><div class="eyebrow"><span class="eyebrow-dot"></span><span id="officialBadge"></span></div><h1 id="title"></h1><div class="subtitle" id="subtitle"></div><button class="locate" id="locate"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span id="locateText"></span></button></section>
+<div class="quick-info"><div class="quick-card"><div class="quick-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2" stroke="currentColor" stroke-width="2"/></svg></div><div><div class="quick-title" id="gpsTitle"></div><div class="quick-sub" id="gpsSub"></div></div></div><div class="quick-card"><div class="quick-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h14v16H5z" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div><div><div class="quick-title" id="dataTitle"></div><div class="quick-sub" id="dataSub"></div></div></div></div>
+<div id="status" class="status" style="display:none"></div><div id="result" class="result"></div>
+<div class="disclaimer"><div class="official">✓ <span id="sourceLabel"></span></div><div id="disclaimer"></div></div>
+</main></div>
 <script>
-const API = "https://api.hamburg.de/datasets/v1/bewohnerparkgebiete/collections/bewohnerparkgebiete/items?f=json&limit=1000";
-const STORAGE_KEY = "hamburgParkLanguage";
-
-const FLAGS = {
-  de:`<svg class="flag" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#ffce00"/><rect width="30" height="13.33" fill="#dd0000"/><rect width="30" height="6.67" fill="#000"/></svg>`,
-  en:`<svg class="flag" viewBox="0 0 38 20" aria-hidden="true"><rect width="38" height="20" fill="#fff"/><g fill="#b22234"><rect width="38" height="1.54" y="0"/><rect width="38" height="1.54" y="3.08"/><rect width="38" height="1.54" y="6.16"/><rect width="38" height="1.54" y="9.24"/><rect width="38" height="1.54" y="12.32"/><rect width="38" height="1.54" y="15.4"/><rect width="38" height="1.54" y="18.46"/></g><rect width="15.2" height="10.77" fill="#3c3b6e"/><g fill="#fff" opacity=".95"><circle cx="2" cy="2" r=".45"/><circle cx="5" cy="2" r=".45"/><circle cx="8" cy="2" r=".45"/><circle cx="11" cy="2" r=".45"/><circle cx="14" cy="2" r=".45"/><circle cx="3.5" cy="4" r=".45"/><circle cx="6.5" cy="4" r=".45"/><circle cx="9.5" cy="4" r=".45"/><circle cx="12.5" cy="4" r=".45"/><circle cx="2" cy="6" r=".45"/><circle cx="5" cy="6" r=".45"/><circle cx="8" cy="6" r=".45"/><circle cx="11" cy="6" r=".45"/><circle cx="14" cy="6" r=".45"/><circle cx="3.5" cy="8" r=".45"/><circle cx="6.5" cy="8" r=".45"/><circle cx="9.5" cy="8" r=".45"/><circle cx="12.5" cy="8" r=".45"/></g></svg>`,
-  tr:`<svg class="flag" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#e30a17"/><circle cx="12" cy="10" r="5.2" fill="#fff"/><circle cx="13.7" cy="10" r="4.15" fill="#e30a17"/><polygon points="18.9,10 16.5,9.2 17.9,11.2 17.9,8.8 16.5,10.8" fill="#fff"/></svg>`
-};
-
-const I18N = {
-  de:{htmlLang:"de",pageTitle:"Hamburg Parkzone",title:"Welche Parkzone ist hier?",subtitle:"Finde dein Hamburger Bewohnerparkgebiet direkt über deinen aktuellen GPS-Standort.",locate:"Standort prüfen",officialBadge:"Offizielle Hamburg-Daten",sourceLabel:"LBV / Hamburg Open Data",source:"Die App zeigt das Bewohnerparkgebiet. Verkehrszeichen vor Ort, Parkverbote, Zeiten, Zusatzschilder und vorübergehende Regelungen sind maßgeblich.",yourZone:"Dein Bewohnerparkgebiet",parkingRule:"Parkregelung",hours:"Zeiten",maxDuration:"Höchstparkdauer",feeZone:"Gebührenzone",minutes:"Min.",locating:"GPS-Standort wird ermittelt…",unsupported:"Dieser Browser unterstützt keine Standortbestimmung.",checking:"Standort gefunden. Parkgebiet wird geprüft…",accuracy:"GPS-Genauigkeit ca.",meters:"m",outside:"Dieser Standort liegt offenbar in keinem registrierten Bewohnerparkgebiet.",found:"Parkgebiet gefunden.",multiple:n=>`Der Standort liegt in ${n} Gebieten. Möglicherweise handelt es sich um einen Überlappungsbereich.`,apiError:"Die offiziellen Hamburger Parkdaten konnten nicht geladen werden.",denied:"Standortzugriff wurde nicht erlaubt. Aktiviere für diese Website in Safari unter Website-Einstellungen → Standort die Option „Erlauben“ oder „Fragen“.",unavailable:"Der GPS-Standort konnte nicht ermittelt werden.",timeout:"Die Standortabfrage hat zu lange gedauert.",genericLocationError:"Standort konnte nicht ermittelt werden."},
-  en:{htmlLang:"en",pageTitle:"Hamburg Parking Zone",title:"Which parking zone am I in?",subtitle:"Find your Hamburg resident parking zone instantly using your current GPS location.",locate:"Check my location",officialBadge:"Official Hamburg data",sourceLabel:"LBV / Hamburg Open Data",source:"The app shows the resident parking zone. Local traffic signs, parking restrictions, times, additional signs and temporary rules always take precedence.",yourZone:"Your resident parking zone",parkingRule:"Parking rule",hours:"Hours",maxDuration:"Maximum duration",feeZone:"Fee zone",minutes:"min",locating:"Getting GPS location…",unsupported:"This browser does not support geolocation.",checking:"Location found. Checking parking zone…",accuracy:"GPS accuracy approx.",meters:"m",outside:"This location does not appear to be inside a registered resident parking zone.",found:"Parking zone found.",multiple:n=>`The location matches ${n} zones. This may be an overlap area.`,apiError:"Could not access Hamburg's official parking data.",denied:"Location access was not allowed. In Safari, open Website Settings → Location and choose “Allow” or “Ask” for this website.",unavailable:"GPS location could not be determined.",timeout:"The location request timed out.",genericLocationError:"Location could not be determined."},
-  tr:{htmlLang:"tr",pageTitle:"Hamburg Park Bölgesi",title:"Hangi park bölgesindeyim?",subtitle:"Mevcut GPS konumunu kullanarak Hamburg’daki Bewohnerparkgebiet kodunu anında bul.",locate:"Konumumu kontrol et",officialBadge:"Resmi Hamburg verisi",sourceLabel:"LBV / Hamburg Open Data",source:"Uygulama Bewohnerparkgebiet bölgesini gösterir. Park yasağı, saat, alt levha ve geçici düzenlemelerde sokaktaki trafik işaretleri esas alınır.",yourZone:"Bulunduğun park bölgesi",parkingRule:"Park düzeni",hours:"Saatler",maxDuration:"Azami süre",feeZone:"Ücret bölgesi",minutes:"dk",locating:"GPS konumu alınıyor…",unsupported:"Bu tarayıcı GPS konumunu desteklemiyor.",checking:"Konum bulundu. Park bölgesi kontrol ediliyor…",accuracy:"GPS doğruluğu yaklaşık",meters:"m",outside:"Bu konum kayıtlı bir Bewohnerparkgebiet içinde görünmüyor.",found:"Park bölgesi bulundu.",multiple:n=>`Konum ${n} bölgeyle eşleşiyor. Bu bir örtüşme alanı olabilir.`,apiError:"Hamburg resmi park verisine ulaşılamadı.",denied:"Konum izni verilmedi. Safari'de bu site için Web Sitesi Ayarları → Konum bölümünden “İzin Ver” veya “Sor” seç.",unavailable:"GPS konumu alınamadı.",timeout:"Konum isteği zaman aşımına uğradı.",genericLocationError:"Konum alınamadı."}
-};
-
-let currentLang = localStorage.getItem(STORAGE_KEY) || "de";
-if (!I18N[currentLang]) currentLang = "de";
-
-const btn=document.getElementById("locate"), locateText=document.getElementById("locateText"), statusEl=document.getElementById("status"), resultEl=document.getElementById("result"), titleEl=document.getElementById("title"), subtitleEl=document.getElementById("subtitle"), disclaimerEl=document.getElementById("disclaimer"), sourceLabelEl=document.getElementById("sourceLabel"), officialBadgeEl=document.getElementById("officialBadge"), langWrap=document.getElementById("langWrap"), langTrigger=document.getElementById("langTrigger"), currentFlag=document.getElementById("currentFlag");
-
-function t(){return I18N[currentLang];}
-function applyLanguage(lang){
-  currentLang=I18N[lang]?lang:"de"; localStorage.setItem(STORAGE_KEY,currentLang); const x=t();
-  document.documentElement.lang=x.htmlLang; document.title=x.pageTitle; titleEl.textContent=x.title; subtitleEl.textContent=x.subtitle; locateText.textContent=x.locate; disclaimerEl.textContent=x.source; sourceLabelEl.textContent=x.sourceLabel; officialBadgeEl.textContent=x.officialBadge; currentFlag.innerHTML=FLAGS[currentLang];
-  document.querySelectorAll(".lang-option").forEach(o=>{o.classList.toggle("active",o.dataset.lang===currentLang);o.innerHTML=FLAGS[o.dataset.lang];});
-  if(resultEl.dataset.features) renderStoredResult();
-}
-function closeLang(){langWrap.classList.remove("open");langTrigger.setAttribute("aria-expanded","false");}
-langTrigger.addEventListener("click",e=>{e.stopPropagation();const open=langWrap.classList.toggle("open");langTrigger.setAttribute("aria-expanded",String(open));});
-document.querySelectorAll(".lang-option").forEach(o=>o.addEventListener("click",()=>{applyLanguage(o.dataset.lang);closeLang();}));
-document.addEventListener("click",e=>{if(!langWrap.contains(e.target)) closeLang();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape") closeLang();});
-
-function setStatus(text,cls=""){statusEl.className="status "+cls;statusEl.style.display="block";statusEl.innerHTML=text;}
-function pointInRing(point,ring){const[x,y]=point;let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const[xi,yi]=ring[i],[xj,yj]=ring[j];const intersect=((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/((yj-yi)||Number.EPSILON)+xi);if(intersect)inside=!inside;}return inside;}
-function pointInPolygon(point,coords){if(!coords?.length||!pointInRing(point,coords[0]))return false;for(let i=1;i<coords.length;i++)if(pointInRing(point,coords[i]))return false;return true;}
-function contains(feature,point){const g=feature.geometry;if(!g)return false;if(g.type==="Polygon")return pointInPolygon(point,g.coordinates);if(g.type==="MultiPolygon")return g.coordinates.some(poly=>pointInPolygon(point,poly));return false;}
-function esc(v){return String(v??"—").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
-function zoneCard(f,lat,lon){const p=f.properties||{},x=t();return `<div class="zone-card"><div class="zone-label">${x.yourZone}</div><div class="zone">${esc(p.bwp_code)}</div><div class="zone-name">${esc(p.bwp_name)}</div></div><div class="details"><div class="row"><div class="label">${x.parkingRule}</div><div class="value">${esc(p.bewirtschaftungsart)}</div></div><div class="row"><div class="label">${x.hours}</div><div class="value">${esc(p.bewirtschaftungszeit)}</div></div><div class="row"><div class="label">${x.maxDuration}</div><div class="value">${p.hoechstparkdauer?esc(p.hoechstparkdauer)+" "+x.minutes:"—"}</div></div><div class="row"><div class="label">${x.feeZone}</div><div class="value">${esc(p.gebuehrenzone)}</div></div><div class="row"><div class="label">GPS</div><div class="value">${lat.toFixed(6)}, ${lon.toFixed(6)}</div></div></div>`;}
-function renderStoredResult(){try{const data=JSON.parse(resultEl.dataset.features),x=t();if(data.matches.length===0){setStatus(x.outside,"warn");resultEl.innerHTML=`<div class="details"><div class="row"><div class="label">GPS</div><div class="value">${data.lat.toFixed(6)}, ${data.lon.toFixed(6)}</div></div></div>`;}else{setStatus(data.matches.length>1?x.multiple(data.matches.length):x.found,"ok");resultEl.innerHTML=data.matches.map(f=>zoneCard(f,data.lat,data.lon)).join("");}}catch(_){}}
-async function locate(){resultEl.innerHTML="";delete resultEl.dataset.features;btn.disabled=true;const x=t();setStatus(x.locating);if(!navigator.geolocation){setStatus(x.unsupported,"error");btn.disabled=false;return;}navigator.geolocation.getCurrentPosition(async pos=>{const lat=pos.coords.latitude,lon=pos.coords.longitude;setStatus(`${x.checking}<br><span class="small">${x.accuracy} ${Math.round(pos.coords.accuracy)} ${x.meters}</span>`);try{const res=await fetch(API,{headers:{"Accept":"application/geo+json,application/json"}});if(!res.ok)throw new Error("API "+res.status);const data=await res.json();const matches=(data.features||[]).filter(f=>contains(f,[lon,lat]));resultEl.dataset.features=JSON.stringify({matches,lat,lon});renderStoredResult();}catch(e){setStatus(`${x.apiError}<br><span class="small">${esc(e.message)}</span>`,"error");}finally{btn.disabled=false;}},err=>{const msgs={1:x.denied,2:x.unavailable,3:x.timeout};setStatus(msgs[err.code]||x.genericLocationError,"error");btn.disabled=false;},{enableHighAccuracy:true,timeout:12000,maximumAge:15000});}
+const API="https://api.hamburg.de/datasets/v1/bewohnerparkgebiete/collections/bewohnerparkgebiete/items?f=json&limit=1000",STORAGE_KEY="hamburgParkLanguage";
+const FLAGS={de:`<svg class="flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#ffce00"/><rect width="30" height="13.33" fill="#dd0000"/><rect width="30" height="6.67" fill="#000"/></svg>`,en:`<svg class="flag" viewBox="0 0 38 20"><rect width="38" height="20" fill="#fff"/><g fill="#b22234"><rect width="38" height="1.54"/><rect width="38" height="1.54" y="3.08"/><rect width="38" height="1.54" y="6.16"/><rect width="38" height="1.54" y="9.24"/><rect width="38" height="1.54" y="12.32"/><rect width="38" height="1.54" y="15.4"/><rect width="38" height="1.54" y="18.46"/></g><rect width="15.2" height="10.77" fill="#3c3b6e"/></svg>`,tr:`<svg class="flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#e30a17"/><circle cx="12" cy="10" r="5.2" fill="#fff"/><circle cx="13.7" cy="10" r="4.15" fill="#e30a17"/><path d="m19 10-3.2-1 2 2.7V8.3l-2 2.7Z" fill="#fff"/></svg>`};
+const I18N={de:{htmlLang:"de",pageTitle:"Hamburg Parkzone",title:"Welche Parkzone ist hier?",subtitle:"Finde dein Hamburger Bewohnerparkgebiet direkt über deinen aktuellen GPS-Standort.",locate:"Standort prüfen",officialBadge:"Offizielle Hamburg-Daten",sourceLabel:"LBV / Hamburg Open Data",source:"Die App zeigt das Bewohnerparkgebiet. Verkehrszeichen vor Ort, Parkverbote, Zeiten, Zusatzschilder und vorübergehende Regelungen sind maßgeblich.",gpsTitle:"GPS-Standort",gpsSub:"Direkt vom Gerät",dataTitle:"Offizielle Daten",dataSub:"Hamburg Open Data",yourZone:"Dein Bewohnerparkgebiet",parkingRule:"Parkregelung",hours:"Zeiten",maxDuration:"Höchstparkdauer",feeZone:"Gebührenzone",minutes:"Min.",locating:"GPS-Standort wird ermittelt…",unsupported:"Dieser Browser unterstützt keine Standortbestimmung.",checking:"Standort gefunden. Parkgebiet wird geprüft…",accuracy:"GPS-Genauigkeit ca.",meters:"m",outside:"Dieser Standort liegt offenbar in keinem registrierten Bewohnerparkgebiet.",found:"Parkgebiet gefunden.",multiple:n=>`Der Standort liegt in ${n} Gebieten. Möglicherweise handelt es sich um einen Überlappungsbereich.`,apiError:"Die offiziellen Hamburger Parkdaten konnten nicht geladen werden.",denied:"Standortzugriff wurde nicht erlaubt. Aktiviere für diese Website in Safari unter Website-Einstellungen → Standort die Option „Erlauben“ oder „Fragen“.",unavailable:"Der GPS-Standort konnte nicht ermittelt werden.",timeout:"Die Standortabfrage hat zu lange gedauert. Prüfe die Standortfreigabe und versuche es erneut.",genericLocationError:"Standort konnte nicht ermittelt werden."},en:{htmlLang:"en",pageTitle:"Hamburg Parking Zone",title:"Which parking zone am I in?",subtitle:"Find your Hamburg resident parking zone instantly using your current GPS location.",locate:"Check my location",officialBadge:"Official Hamburg data",sourceLabel:"LBV / Hamburg Open Data",source:"The app shows the resident parking zone. Local traffic signs, parking restrictions, times, additional signs and temporary rules always take precedence.",gpsTitle:"GPS location",gpsSub:"Directly from your device",dataTitle:"Official data",dataSub:"Hamburg Open Data",yourZone:"Your resident parking zone",parkingRule:"Parking rule",hours:"Hours",maxDuration:"Maximum duration",feeZone:"Fee zone",minutes:"min",locating:"Getting GPS location…",unsupported:"This browser does not support geolocation.",checking:"Location found. Checking parking zone…",accuracy:"GPS accuracy approx.",meters:"m",outside:"This location does not appear to be inside a registered resident parking zone.",found:"Parking zone found.",multiple:n=>`The location matches ${n} zones. This may be an overlap area.`,apiError:"Could not access Hamburg's official parking data.",denied:"Location access was not allowed. In Safari, open Website Settings → Location and choose “Allow” or “Ask” for this website.",unavailable:"GPS location could not be determined.",timeout:"The location request timed out. Check location permission and try again.",genericLocationError:"Location could not be determined."},tr:{htmlLang:"tr",pageTitle:"Hamburg Park Bölgesi",title:"Hangi park bölgesindeyim?",subtitle:"Mevcut GPS konumunu kullanarak Hamburg’daki Bewohnerparkgebiet kodunu anında bul.",locate:"Konumumu kontrol et",officialBadge:"Resmi Hamburg verisi",sourceLabel:"LBV / Hamburg Open Data",source:"Uygulama Bewohnerparkgebiet bölgesini gösterir. Park yasağı, saat, alt levha ve geçici düzenlemelerde sokaktaki trafik işaretleri esas alınır.",gpsTitle:"GPS konumu",gpsSub:"Doğrudan cihazından",dataTitle:"Resmi veri",dataSub:"Hamburg Open Data",yourZone:"Bulunduğun park bölgesi",parkingRule:"Park düzeni",hours:"Saatler",maxDuration:"Azami süre",feeZone:"Ücret bölgesi",minutes:"dk",locating:"GPS konumu alınıyor…",unsupported:"Bu tarayıcı GPS konumunu desteklemiyor.",checking:"Konum bulundu. Park bölgesi kontrol ediliyor…",accuracy:"GPS doğruluğu yaklaşık",meters:"m",outside:"Bu konum kayıtlı bir Bewohnerparkgebiet içinde görünmüyor.",found:"Park bölgesi bulundu.",multiple:n=>`Konum ${n} bölgeyle eşleşiyor. Bu bir örtüşme alanı olabilir.`,apiError:"Hamburg resmi park verisine ulaşılamadı.",denied:"Konum izni verilmedi. Safari'de bu site için Web Sitesi Ayarları → Konum bölümünden “İzin Ver” veya “Sor” seç.",unavailable:"GPS konumu alınamadı.",timeout:"Konum isteği zaman aşımına uğradı. Konum iznini kontrol edip tekrar dene.",genericLocationError:"Konum alınamadı."}};
+let currentLang=localStorage.getItem(STORAGE_KEY)||"de";if(!I18N[currentLang])currentLang="de";
+const btn=document.getElementById("locate"),locateText=document.getElementById("locateText"),statusEl=document.getElementById("status"),resultEl=document.getElementById("result"),titleEl=document.getElementById("title"),subtitleEl=document.getElementById("subtitle"),disclaimerEl=document.getElementById("disclaimer"),sourceLabelEl=document.getElementById("sourceLabel"),officialBadgeEl=document.getElementById("officialBadge"),langWrap=document.getElementById("langWrap"),langTrigger=document.getElementById("langTrigger"),currentFlag=document.getElementById("currentFlag"),gpsTitle=document.getElementById("gpsTitle"),gpsSub=document.getElementById("gpsSub"),dataTitle=document.getElementById("dataTitle"),dataSub=document.getElementById("dataSub");
+function t(){return I18N[currentLang]}function applyLanguage(lang){currentLang=I18N[lang]?lang:"de";localStorage.setItem(STORAGE_KEY,currentLang);const x=t();document.documentElement.lang=x.htmlLang;document.title=x.pageTitle;titleEl.textContent=x.title;subtitleEl.textContent=x.subtitle;locateText.textContent=x.locate;disclaimerEl.textContent=x.source;sourceLabelEl.textContent=x.sourceLabel;officialBadgeEl.textContent=x.officialBadge;gpsTitle.textContent=x.gpsTitle;gpsSub.textContent=x.gpsSub;dataTitle.textContent=x.dataTitle;dataSub.textContent=x.dataSub;currentFlag.innerHTML=FLAGS[currentLang];document.querySelectorAll(".lang-option").forEach(o=>{o.classList.toggle("active",o.dataset.lang===currentLang);o.innerHTML=FLAGS[o.dataset.lang]});if(resultEl.dataset.features)renderStoredResult()}
+function closeLang(){langWrap.classList.remove("open");langTrigger.setAttribute("aria-expanded","false")}langTrigger.addEventListener("click",e=>{e.stopPropagation();const open=langWrap.classList.toggle("open");langTrigger.setAttribute("aria-expanded",String(open))});document.querySelectorAll(".lang-option").forEach(o=>o.addEventListener("click",()=>{applyLanguage(o.dataset.lang);closeLang()}));document.addEventListener("click",e=>{if(!langWrap.contains(e.target))closeLang()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLang()});
+function setStatus(text,cls=""){statusEl.className="status "+cls;statusEl.style.display="block";statusEl.innerHTML=text}function pointInRing(point,ring){const[x,y]=point;let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const[xi,yi]=ring[i],[xj,yj]=ring[j];const intersect=((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/((yj-yi)||Number.EPSILON)+xi);if(intersect)inside=!inside}return inside}function pointInPolygon(point,coords){if(!coords?.length||!pointInRing(point,coords[0]))return false;for(let i=1;i<coords.length;i++)if(pointInRing(point,coords[i]))return false;return true}function contains(feature,point){const g=feature.geometry;if(!g)return false;if(g.type==="Polygon")return pointInPolygon(point,g.coordinates);if(g.type==="MultiPolygon")return g.coordinates.some(poly=>pointInPolygon(point,poly));return false}function esc(v){return String(v??"—").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function zoneCard(f,lat,lon){const p=f.properties||{},x=t();return `<div class="zone-card"><div class="zone-label">${x.yourZone}</div><div class="zone">${esc(p.bwp_code)}</div><div class="zone-name">${esc(p.bwp_name)}</div></div><div class="details"><div class="row"><div class="label">${x.parkingRule}</div><div class="value">${esc(p.bewirtschaftungsart)}</div></div><div class="row"><div class="label">${x.hours}</div><div class="value">${esc(p.bewirtschaftungszeit)}</div></div><div class="row"><div class="label">${x.maxDuration}</div><div class="value">${p.hoechstparkdauer?esc(p.hoechstparkdauer)+" "+x.minutes:"—"}</div></div><div class="row"><div class="label">${x.feeZone}</div><div class="value">${esc(p.gebuehrenzone)}</div></div><div class="row"><div class="label">GPS</div><div class="value">${lat.toFixed(6)}, ${lon.toFixed(6)}</div></div></div>`}function renderStoredResult(){try{const data=JSON.parse(resultEl.dataset.features),x=t();if(data.matches.length===0){setStatus(x.outside,"warn");resultEl.innerHTML=`<div class="details"><div class="row"><div class="label">GPS</div><div class="value">${data.lat.toFixed(6)}, ${data.lon.toFixed(6)}</div></div></div>`}else{setStatus(data.matches.length>1?x.multiple(data.matches.length):x.found,"ok");resultEl.innerHTML=data.matches.map(f=>zoneCard(f,data.lat,data.lon)).join("")}}catch(_){}}
+async function locate(){resultEl.innerHTML="";delete resultEl.dataset.features;btn.disabled=true;const x=t();setStatus(x.locating);if(!navigator.geolocation){setStatus(x.unsupported,"error");btn.disabled=false;return}navigator.geolocation.getCurrentPosition(async pos=>{const lat=pos.coords.latitude,lon=pos.coords.longitude;setStatus(`${x.checking}<br><span class="small">${x.accuracy} ${Math.round(pos.coords.accuracy)} ${x.meters}</span>`);try{const res=await fetch(API,{headers:{Accept:"application/geo+json,application/json"}});if(!res.ok)throw new Error("API "+res.status);const data=await res.json(),matches=(data.features||[]).filter(f=>contains(f,[lon,lat]));resultEl.dataset.features=JSON.stringify({matches,lat,lon});renderStoredResult()}catch(e){setStatus(`${x.apiError}<br><span class="small">${esc(e.message)}</span>`,"error")}finally{btn.disabled=false}},err=>{const msgs={1:x.denied,2:x.unavailable,3:x.timeout};setStatus(msgs[err.code]||x.genericLocationError,"error");btn.disabled=false},{enableHighAccuracy:true,timeout:15000,maximumAge:10000})}
 btn.addEventListener("click",locate);applyLanguage(currentLang);
-</script>
-</body>
-</html>
+</script></body></html>
