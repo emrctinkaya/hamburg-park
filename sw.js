@@ -1,5 +1,5 @@
-const CACHE='hamburg-park-v1.6.0';
-const SHELL=['./','./index.html','./manifest.json','./icon.svg','./localization-fix.js'];
+const CACHE='hamburg-park-v1.7.0';
+const SHELL=['./','./index.html','./manifest.json','./icon.svg','./localization-fix.js','./onboarding-ui.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
 self.addEventListener('fetch',event=>{
@@ -12,15 +12,18 @@ self.addEventListener('fetch',event=>{
   const isDocument=event.request.mode==='navigate'||url.pathname.endsWith('/index.html')||url.pathname.endsWith('/hamburg-park/');
   if(isDocument){
     event.respondWith(fetch(event.request).then(async response=>{
-      const html=await response.clone().text();
-      const patched=html.includes('localization-fix.js')?html:html.replace('</body>','<script src="./localization-fix.js"></script></body>');
-      const out=new Response(patched,{status:response.status,statusText:response.statusText,headers:response.headers});
+      let html=await response.clone().text();
+      if(!html.includes('localization-fix.js'))html=html.replace('</body>','<script src="./localization-fix.js"></script></body>');
+      if(!html.includes('onboarding-ui.js'))html=html.replace('</body>','<script src="./onboarding-ui.js"></script></body>');
+      const out=new Response(html,{status:response.status,statusText:response.statusText,headers:response.headers});
       caches.open(CACHE).then(cache=>cache.put(event.request,out.clone())).catch(()=>{});
       return out;
     }).catch(()=>caches.match(event.request).then(async r=>{
       if(!r)return caches.match('./');
-      const html=await r.text();
-      return new Response(html.includes('localization-fix.js')?html:html.replace('</body>','<script src="./localization-fix.js"></script></body>'),{headers:{'Content-Type':'text/html; charset=utf-8'}});
+      let html=await r.text();
+      if(!html.includes('localization-fix.js'))html=html.replace('</body>','<script src="./localization-fix.js"></script></body>');
+      if(!html.includes('onboarding-ui.js'))html=html.replace('</body>','<script src="./onboarding-ui.js"></script></body>');
+      return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8'}});
     })));
     return;
   }
