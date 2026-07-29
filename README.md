@@ -1,17 +1,17 @@
 # Hamburg Park
 
-Hamburg Park is a lightweight, mobile-first web app that helps users identify the official resident parking zone at their current location in Hamburg and compare it with their saved resident parking permit code.
+Hamburg Park is a lightweight, mobile-first web app that identifies the official resident parking zone at the user's current location in Hamburg and compares it with a saved resident parking permit code.
 
 **Live app:** https://emrctinkaya.github.io/hamburg-park/
 
 ## What it does
 
-Hamburg Park combines the user's device location with official Hamburg resident parking zone data. It is designed to answer two practical questions quickly:
+Hamburg Park combines device location with official Hamburg resident parking-zone data to answer two practical questions:
 
 1. **Which resident parking zone am I currently in?**
 2. **Does my saved permit code match that zone?**
 
-The app also visualizes official zone boundaries on an interactive map and updates the result while the app is active and the user's location changes.
+The app visualizes official zone boundaries on an interactive map and can update the result while the app is active and the user's location changes.
 
 > **Important:** A matching permit and zone does not automatically mean parking is allowed at a specific spot. Traffic signs, supplementary signs, temporary restrictions, construction zones, stopping restrictions, and other local rules always take precedence.
 
@@ -20,18 +20,18 @@ The app also visualizes official zone boundaries on an interactive map and updat
 - Automatic GPS-based zone detection
 - Live location updates while the app is active
 - Interactive map with official Hamburg parking-zone boundaries
-- Current zone highlighting and GPS marker
+- Current-zone highlighting and GPS marker
 - Resident parking permit comparison
 - Permit-code suggestions based on official zone data
 - Validation that prevents unknown zone codes from being saved
 - Support for overlapping parking zones
 - GPS accuracy display
 - Map control to return to the current location
-- Responsive, mobile-first UI with dark-mode support
+- Responsive mobile-first UI with dark-mode support
 - Progressive Web App (PWA) support
-- Saved language and permit preferences using local browser storage
+- Saved language and permit preferences using browser storage
 - German, English, and Turkish interface
-- Localization of displayed API values such as parking hours and parking-management descriptions
+- Localization of parking hours and parking-management descriptions returned by the Hamburg API
 - Privacy-focused location processing in the browser
 
 ## Languages
@@ -42,21 +42,19 @@ Hamburg Park supports:
 - 🇺🇸 English
 - 🇹🇷 Turkish
 
-The selected language is saved locally and restored on future visits.
+The selected language is stored locally and restored on future visits.
 
-Official identifiers such as `E301` remain unchanged. User-facing API values are localized where a reliable translation or formatting rule is available. Unknown values are intentionally shown as provided by the official source rather than guessed.
+Official identifiers such as `E301` and proper zone names remain unchanged. User-facing descriptive API values are localized when a reliable translation or formatting rule is available. Unknown values are intentionally preserved rather than translated by guessing.
 
 ## Data source
 
-Parking-zone geometry and related attributes are loaded from **Hamburg Open Data** through the official Hamburg API.
-
-Dataset endpoint used by the app:
+Parking-zone geometry and attributes are loaded from **Hamburg Open Data** through the official Hamburg API.
 
 ```text
 https://api.hamburg.de/datasets/v1/bewohnerparkgebiete/collections/bewohnerparkgebiete/items?f=json&limit=1000
 ```
 
-The app currently uses fields including:
+The app uses fields including:
 
 - `bwp_code` — official zone code
 - `bwp_name` — zone name
@@ -78,28 +76,32 @@ The map is rendered with Leaflet and OpenStreetMap map tiles.
 6. If a permit code is saved, it is compared with the matching official zone code(s).
 7. While the app remains active, location changes can automatically update the result.
 
-Location coordinates are used for the zone calculation in the browser. Hamburg Park does not require an account or its own backend to perform the lookup.
+Location coordinates are used for zone calculation in the browser. Hamburg Park does not require an account or application backend for the lookup.
 
 ## Permit code selection
 
 Users can enter a permit code such as `E301`. As they type, the app shows matching suggestions generated from the official Hamburg dataset.
 
-Only a code present in the currently loaded official data can be saved. Selecting a new permit simply replaces the previously saved permit.
+Only a code present in the currently loaded official data can be saved. Selecting a new permit replaces the previously saved permit.
 
 ## Localization
 
-Static UI text is maintained separately for German, English, and Turkish.
+Static UI text is maintained for German, English, and Turkish. API values pass through a display-localization layer before being shown to the user.
 
-API values are passed through a display-localization layer. This handles common values and time expressions, for example:
+Common examples:
 
-| German source | English | Turkish |
+| German API value | English | Turkish |
 | --- | --- | --- |
 | `Täglich 9 - 22` | `Daily 9 AM–10 PM` | `Her gün 09:00–22:00` |
 | `gebührenpflichtig` | `Paid parking` | `Ücretli park` |
 | `mit Parkschein` | `Parking ticket required` | `Park bileti gerekli` |
+| `Parkschein, Bewohner mit Ausweis frei` | `Parking ticket required; residents with permit exempt` | `Park bileti gerekli; izinli bölge sakinleri muaf` |
+| `Bewohner mit Ausweis frei` | `Residents with permit exempt` | `İzinli bölge sakinleri muaf` |
 | `keine Höchstparkdauer` | `No maximum parking time` | `Azami park süresi yok` |
 
-Official zone codes and proper names are not translated.
+The normalization also handles common wording variants such as `Bewohner frei` and `Bewohner mit Parkausweis frei`. Official codes and proper names are not translated.
+
+If Hamburg introduces a descriptive value that the app does not recognize, the original official value is retained instead of inventing a translation.
 
 ## Tech stack
 
@@ -119,16 +121,9 @@ There is no application server, database, authentication system, or build framew
 
 ## Run locally
 
-Clone the repository:
-
 ```bash
 git clone https://github.com/emrctinkaya/hamburg-park.git
 cd hamburg-park
-```
-
-Serve the directory with a local HTTP server. For example, with Python:
-
-```bash
 python3 -m http.server 8000
 ```
 
@@ -142,37 +137,35 @@ Geolocation behavior depends on browser security rules. `localhost` is generally
 
 ## Deployment
 
-The production web app is hosted with GitHub Pages from this repository.
-
-Changes merged or committed to the branch configured for GitHub Pages are published through the repository's Pages deployment process.
-
-Production:
+The production web app is hosted with GitHub Pages:
 
 ```text
 https://emrctinkaya.github.io/hamburg-park/
 ```
 
-Because Hamburg Park includes a Service Worker, an older cached version can occasionally remain visible briefly after a deployment. The Service Worker cache version should be updated when cache behavior or application assets change significantly.
+Changes committed to the branch configured for GitHub Pages are published through the repository's Pages deployment process.
+
+Because Hamburg Park uses a Service Worker, cache versions should be updated when application assets or runtime behavior change significantly.
 
 ## PWA
 
-Hamburg Park can be used as a Progressive Web App on supported devices. The repository includes a Web App Manifest, application icon assets, and a Service Worker.
+Hamburg Park can be installed as a Progressive Web App on supported devices. The project includes a Web App Manifest, icon assets, and a Service Worker.
 
-On mobile devices, users can add the app to their home screen for a more app-like experience. GPS behavior and background execution remain subject to browser and operating-system restrictions, particularly on iOS.
+Mobile GPS behavior and background execution remain subject to browser and operating-system restrictions, particularly on iOS.
 
 ## Privacy
 
-Hamburg Park is designed without user accounts or an application backend.
+Hamburg Park is designed without user accounts or a custom application backend.
 
-The app stores limited preferences in the browser, such as:
+The app stores limited preferences in the browser, including:
 
 - selected language
 - saved resident parking permit code
 - whether location access was previously used
 
-GPS coordinates are used to determine the current parking zone in the browser. The project itself does not need to send the user's coordinates to a custom Hamburg Park server.
+GPS coordinates are used to determine the current parking zone in the browser. Hamburg Park itself does not need to send those coordinates to a custom server.
 
-Third-party services used by the app, such as map tile providers and the official Hamburg data API, may receive normal network request information according to their own policies.
+Third-party services such as map tile providers and the official Hamburg data API may receive normal network request information according to their own policies.
 
 ## Limitations
 
@@ -183,14 +176,15 @@ A zone match cannot account for every rule affecting an individual parking space
 Other limitations include:
 
 - GPS accuracy varies by device and environment.
-- A location near a zone boundary may be ambiguous when GPS accuracy is poor.
-- Official dataset structure or values may change over time.
+- Locations near a zone boundary can be ambiguous when GPS accuracy is poor.
+- Official dataset structure, terminology, and values may change over time.
 - Live location tracking works only while permitted by the browser and operating system.
 - Map tiles require network access unless already available through browser caching.
+- Translations describe official API values for usability; the German source value remains authoritative where legal interpretation matters.
 
 ## Project structure
 
-The project is intentionally compact. Core application UI and logic currently live in `index.html`, while PWA-related assets such as the manifest, icons, and Service Worker are stored alongside it.
+The project is intentionally compact. Core application UI and logic currently live in `index.html`. PWA assets and the Service Worker live alongside it, while additional localization rules can be maintained separately as the API vocabulary grows.
 
 As the project grows, localization, map logic, API normalization, and styles can be split into dedicated modules without changing the underlying architecture.
 
@@ -198,7 +192,7 @@ As the project grows, localization, map logic, API normalization, and styles can
 
 Issues and pull requests are welcome. When changing parking-data handling, translations, or zone logic, prefer official Hamburg sources and avoid assumptions about parking eligibility that are not represented by the source data.
 
-For UI changes, keep the primary user flow simple:
+For UI changes, keep the primary flow simple:
 
 **current location → current zone → permit comparison → map → supporting details**
 
@@ -206,4 +200,4 @@ For UI changes, keep the primary user flow simple:
 
 Hamburg Park is an independent project and is **not an official service of the Free and Hanseatic City of Hamburg**.
 
-Official data remains the responsibility of its respective publisher. Local traffic signs and applicable regulations take precedence over information displayed by this app.
+Official data remains the responsibility of its publisher. Local traffic signs and applicable regulations take precedence over information displayed by this app.
