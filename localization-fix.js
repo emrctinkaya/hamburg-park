@@ -64,4 +64,19 @@
 
     return base(field, raw);
   };
+
+  // The main application may already have rendered the result before this patch is loaded.
+  // Re-apply the currently selected language so resultHtml()/sheet content is rebuilt
+  // using the patched localization function.
+  const rerender = () => {
+    const select = document.getElementById('lang');
+    if (!select) return;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(rerender, 0), { once: true });
+  } else {
+    setTimeout(rerender, 0);
+  }
 })();
