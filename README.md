@@ -19,6 +19,8 @@ The app visualizes official zone boundaries on an interactive map and can update
 
 - Automatic GPS-based zone detection
 - Live location updates while the app is active
+- Adaptive onboarding: the large location card is shown when location access is needed and gets out of the way after location is available
+- Compact live-location status after onboarding
 - Interactive map with official Hamburg parking-zone boundaries
 - Current-zone highlighting and GPS marker
 - Resident parking permit comparison
@@ -33,6 +35,16 @@ The app visualizes official zone boundaries on an interactive map and can update
 - German, English, and Turkish interface
 - Localization of parking hours and parking-management descriptions returned by the Hamburg API
 - Privacy-focused location processing in the browser
+
+## Primary user flow
+
+On first use, Hamburg Park presents a clear location onboarding card and asks the user to enable location access. Once a location result is available, that large introductory card is hidden so the current zone, permit comparison, and map become the visual priority.
+
+If location access is unavailable or later denied, the onboarding/location action becomes available again. This keeps explanatory content useful when needed without permanently pushing the parking result down the screen.
+
+The intended hierarchy is:
+
+**location permission → current zone → permit comparison → map → supporting details**
 
 ## Languages
 
@@ -184,17 +196,15 @@ Other limitations include:
 
 ## Project structure
 
-The project is intentionally compact. Core application UI and logic currently live in `index.html`. PWA assets and the Service Worker live alongside it, while additional localization rules can be maintained separately as the API vocabulary grows.
+The project is intentionally compact. Core application UI and logic currently live in `index.html`. PWA assets and the Service Worker live alongside it. Small compatibility layers are used for API-value localization and adaptive onboarding behavior.
 
-As the project grows, localization, map logic, API normalization, and styles can be split into dedicated modules without changing the underlying architecture.
+As the project grows, localization, map logic, API normalization, onboarding behavior, and styles can be split into dedicated modules without changing the underlying architecture.
 
 ## Contributing
 
 Issues and pull requests are welcome. When changing parking-data handling, translations, or zone logic, prefer official Hamburg sources and avoid assumptions about parking eligibility that are not represented by the source data.
 
-For UI changes, keep the primary flow simple:
-
-**current location → current zone → permit comparison → map → supporting details**
+For UI changes, keep the primary flow simple and prioritize the current parking result over introductory content once location access is available.
 
 ## Disclaimer
 
