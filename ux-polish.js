@@ -12,7 +12,8 @@ const currentLang=()=>localStorage.getItem('hamburgParkLanguage')||document.getE
 let editing=false;
 function savedCode(){return (localStorage.getItem('hamburgParkPermit')||'').trim().toUpperCase()}
 function setText(el,value){if(el&&el.textContent!==value)el.textContent=value}
-function updatePermit(){const l=currentLang(),c=savedCode(),tx=texts[l]||texts.de;setText(label,tx.label);setText(change,tx.change);setText(codeEl,c);permit.classList.toggle('permit-compact',Boolean(c&&!editing))}
+function permitDisplay(c){if(!c)return '';try{const f=(typeof features!=='undefined'?features:[]).find(x=>String(x.properties?.bwp_code||'').replace(/\s+/g,'').toUpperCase()===c.replace(/\s+/g,''));const raw=String(f?.properties?.bwp_name||'').trim();if(!raw)return c;const clean=raw.replace(new RegExp('^'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*','i'),'').trim();return clean?`${c} ${clean}`:c}catch{return c}}
+function updatePermit(){const l=currentLang(),c=savedCode(),tx=texts[l]||texts.de;setText(label,tx.label);setText(change,tx.change);setText(codeEl,permitDisplay(c));permit.classList.toggle('permit-compact',Boolean(c&&!editing))}
 change.addEventListener('click',()=>{editing=true;permit.classList.remove('permit-compact');input.value=savedCode();setTimeout(()=>{input.focus();input.select()},0)});
 document.getElementById('save')?.addEventListener('click',()=>setTimeout(()=>{if(savedCode()){editing=false;updatePermit()}},0));
 document.getElementById('lang')?.addEventListener('change',()=>setTimeout(()=>{updatePermit();updateAccuracy()},0));
@@ -21,4 +22,6 @@ function simplifyZoneName(){document.querySelectorAll('.zone-name').forEach(el=>
 let scheduled=false;function polish(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;updatePermit();updateAccuracy();simplifyZoneName()})}
 const result=document.getElementById('result');if(result){const obs=new MutationObserver(polish);obs.observe(result,{childList:true})}
 updatePermit();updateAccuracy();simplifyZoneName();
+// Official zone data is loaded asynchronously; refresh the compact permit label once it is available.
+let tries=0;const zoneTimer=setInterval(()=>{updatePermit();if((typeof features!=='undefined'&&features.length)||++tries>20)clearInterval(zoneTimer)},500);
 })();
