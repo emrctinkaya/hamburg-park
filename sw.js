@@ -1,4 +1,4 @@
-const CACHE='hamburg-park-v1.8.1';
+const CACHE='hamburg-park-v1.8.2';
 const SHELL=['./','./index.html','./manifest.json','./icon.svg','./localization-fix.js','./onboarding-ui.js','./live-location-fix.js','./flag-language-picker.js','./ux-polish.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
@@ -10,12 +10,6 @@ self.addEventListener('fetch',event=>{
     return;
   }
   const isDocument=event.request.mode==='navigate'||url.pathname.endsWith('/index.html')||url.pathname.endsWith('/hamburg-park/');
-  if(isDocument){
-    event.respondWith(fetch(event.request).then(response=>{
-      caches.open(CACHE).then(cache=>cache.put(event.request,response.clone())).catch(()=>{});
-      return response;
-    }).catch(()=>caches.match(event.request).then(r=>r||caches.match('./'))));
-    return;
-  }
+  if(isDocument){event.respondWith(fetch(event.request).then(response=>{caches.open(CACHE).then(cache=>cache.put(event.request,response.clone())).catch(()=>{});return response;}).catch(()=>caches.match(event.request).then(r=>r||caches.match('./'))));return;}
   event.respondWith(fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy)).catch(()=>{});return response;}).catch(()=>caches.match(event.request)));
 });
