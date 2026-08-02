@@ -9,7 +9,7 @@ const summary=document.createElement('div');summary.className='permit-summary';s
 const label=summary.querySelector('.permit-summary-label'),codeEl=summary.querySelector('.permit-summary-code'),change=summary.querySelector('.permit-change');
 const texts={de:{label:'Mein Parkausweis',change:'Ändern',poor:'Standortgenauigkeit ist niedrig',wait:'Standort wird noch präzisiert',waitBody:'Bitte kurz warten oder gehe an eine Stelle mit freierer Sicht zum Himmel.'},en:{label:'My parking permit',change:'Change',poor:'Location accuracy is low',wait:'Improving location accuracy',waitBody:'Please wait briefly or move to an area with a clearer view of the sky.'},tr:{label:'Park iznim',change:'Değiştir',poor:'Konum doğruluğu düşük',wait:'Konum netleştiriliyor',waitBody:'Lütfen kısa süre bekle veya gökyüzünün daha açık olduğu bir noktaya geç.'}};
 const currentLang=()=>localStorage.getItem('hamburgParkLanguage')||document.getElementById('lang')?.value||'de';
-let editing=false;
+let editing=false,dataReadyHandled=false;
 function savedCode(){return (localStorage.getItem('hamburgParkPermit')||'').trim().toUpperCase()}
 function setText(el,value){if(el&&el.textContent!==value)el.textContent=value}
 function permitDisplay(c){if(!c)return '';try{const f=(typeof features!=='undefined'?features:[]).find(x=>String(x.properties?.bwp_code||'').replace(/\s+/g,'').toUpperCase()===c.replace(/\s+/g,''));const raw=String(f?.properties?.bwp_name||'').trim();return raw||c}catch{return c}}
@@ -18,8 +18,22 @@ change.addEventListener('click',()=>{editing=true;permit.classList.remove('permi
 document.getElementById('save')?.addEventListener('click',()=>setTimeout(()=>{if(savedCode()){editing=false;updatePermit()}},0));
 document.getElementById('lang')?.addEventListener('change',()=>setTimeout(()=>{updatePermit();updateAccuracy()},0));
 function updateAccuracy(){const badge=document.querySelector('.accuracy');if(!badge)return;const m=(badge.textContent||'').match(/±\s*(\d+)/);const acc=m?Number(m[1]):0;const poor=acc>30;badge.classList.toggle('accuracy-poor',poor);const card=badge.closest('.result-card');if(!card)return;let note=card.querySelector('.accuracy-note');const tx=texts[currentLang()]||texts.de;if(poor){if(!note){note=document.createElement('div');note.className='accuracy-note';card.querySelector('.result-top')?.insertAdjacentElement('afterend',note)}setText(note,`${tx.poor} (±${acc} m)`);const verdict=card.querySelector('.permit-verdict');if(verdict){verdict.classList.remove('ok','error','neutral');verdict.classList.add('low-accuracy');verdict.innerHTML=`<strong>${tx.wait}</strong>${tx.waitBody}`}}else if(note){note.remove()}}
+function refreshCurrentPositionAgainstData(){
+  if(dataReadyHandled||typeof features==='undefined'||!features.length)return false;
+  dataReadyHandled=true;
+  updatePermit();
+  if(typeof last!=='undefined'&&last&&Number.isFinite(last.lat)&&Number.isFinite(last.lon)){
+    last.matches=features.filter(f=>contains(f,[last.lon,last.lat]));
+    render(last,false);
+  }
+  return true;
+}
+// Returning users should not wait for the Hamburg dataset before GPS starts.
+if(localStorage.getItem('hamburgParkLocationApproved')==='1'&&typeof startWatch==='function'&&typeof watchId!=='undefined'&&watchId==null){startWatch()}
+// GPS and official data load independently. As soon as the data arrives, reuse
+// the GPS fix already obtained instead of waiting for another watchPosition event.
+let readyChecks=0;const readyTimer=setInterval(()=>{if(refreshCurrentPositionAgainstData()||++readyChecks>200)clearInterval(readyTimer)},50);
 let scheduled=false;function polish(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;updatePermit();updateAccuracy()})}
 const result=document.getElementById('result');if(result){const obs=new MutationObserver(polish);obs.observe(result,{childList:true})}
 updatePermit();updateAccuracy();
-let tries=0;const zoneTimer=setInterval(()=>{updatePermit();if((typeof features!=='undefined'&&features.length)||++tries>20)clearInterval(zoneTimer)},500);
 })();
