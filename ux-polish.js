@@ -6,17 +6,19 @@ const css=`
 const style=document.createElement('style');style.textContent=css;document.head.appendChild(style);
 const permit=document.querySelector('.permit'),input=document.getElementById('permitInput');if(!permit||!input)return;
 const summary=document.createElement('div');summary.className='permit-summary';summary.innerHTML='<div class="permit-summary-main"><div class="permit-summary-label"></div><div class="permit-summary-code"></div></div><button type="button" class="permit-change"></button>';permit.insertBefore(summary,permit.firstChild);
-const label=summary.querySelector('.permit-summary-label'),code=summary.querySelector('.permit-summary-code'),change=summary.querySelector('.permit-change');
+const label=summary.querySelector('.permit-summary-label'),codeEl=summary.querySelector('.permit-summary-code'),change=summary.querySelector('.permit-change');
 const texts={de:{label:'Mein Parkausweis',change:'Ändern',poor:'Standortgenauigkeit ist niedrig'},en:{label:'My parking permit',change:'Change',poor:'Location accuracy is low'},tr:{label:'Park iznim',change:'Değiştir',poor:'Konum doğruluğu düşük'}};
 const currentLang=()=>localStorage.getItem('hamburgParkLanguage')||document.getElementById('lang')?.value||'de';
 let editing=false;
 function savedCode(){return (localStorage.getItem('hamburgParkPermit')||'').trim().toUpperCase()}
-function updatePermit(){const l=currentLang(),c=savedCode();label.textContent=(texts[l]||texts.de).label;change.textContent=(texts[l]||texts.de).change;code.textContent=c;if(c&&!editing)permit.classList.add('permit-compact');else permit.classList.remove('permit-compact')}
+function setText(el,value){if(el&&el.textContent!==value)el.textContent=value}
+function updatePermit(){const l=currentLang(),c=savedCode(),tx=texts[l]||texts.de;setText(label,tx.label);setText(change,tx.change);setText(codeEl,c);permit.classList.toggle('permit-compact',Boolean(c&&!editing))}
 change.addEventListener('click',()=>{editing=true;permit.classList.remove('permit-compact');input.value=savedCode();setTimeout(()=>{input.focus();input.select()},0)});
 document.getElementById('save')?.addEventListener('click',()=>setTimeout(()=>{if(savedCode()){editing=false;updatePermit()}},0));
 document.getElementById('lang')?.addEventListener('change',()=>setTimeout(()=>{updatePermit();updateAccuracy()},0));
-function updateAccuracy(){const badge=document.querySelector('.accuracy');if(!badge)return;const m=(badge.textContent||'').match(/±\s*(\d+)/);const acc=m?Number(m[1]):0;badge.classList.toggle('accuracy-poor',acc>=30);let note=badge.closest('.result-card')?.querySelector('.accuracy-note');if(acc>=30){if(!note){note=document.createElement('div');note.className='accuracy-note';const top=badge.closest('.result-card')?.querySelector('.result-top');top?.insertAdjacentElement('afterend',note)}note.textContent=`${(texts[currentLang()]||texts.de).poor} (±${acc} m)`}else note?.remove()}
-function simplifyZoneName(){document.querySelectorAll('.zone-name').forEach(el=>{const zone=el.closest('.result-card')?.querySelector('.zone')?.textContent?.replace(/\s+/g,'').trim();if(!zone)return;const re=new RegExp('^'+zone.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*','i');el.textContent=el.textContent.replace(re,'').trim()||el.textContent})}
-const obs=new MutationObserver(()=>{updatePermit();updateAccuracy();simplifyZoneName()});obs.observe(document.getElementById('result')||document.body,{childList:true,subtree:true});
+function updateAccuracy(){const badge=document.querySelector('.accuracy');if(!badge)return;const m=(badge.textContent||'').match(/±\s*(\d+)/);const acc=m?Number(m[1]):0;badge.classList.toggle('accuracy-poor',acc>=30);const card=badge.closest('.result-card');if(!card)return;let note=card.querySelector('.accuracy-note');if(acc>=30){if(!note){note=document.createElement('div');note.className='accuracy-note';card.querySelector('.result-top')?.insertAdjacentElement('afterend',note)}const value=`${(texts[currentLang()]||texts.de).poor} (±${acc} m)`;setText(note,value)}else if(note){note.remove()}}
+function simplifyZoneName(){document.querySelectorAll('.zone-name').forEach(el=>{const zone=el.closest('.result-card')?.querySelector('.zone')?.textContent?.replace(/\s+/g,'').trim();if(!zone)return;const re=new RegExp('^'+zone.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*','i');const next=el.textContent.replace(re,'').trim();if(next&&next!==el.textContent)el.textContent=next})}
+let scheduled=false;function polish(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;updatePermit();updateAccuracy();simplifyZoneName()})}
+const result=document.getElementById('result');if(result){const obs=new MutationObserver(polish);obs.observe(result,{childList:true})}
 updatePermit();updateAccuracy();simplifyZoneName();
 })();
