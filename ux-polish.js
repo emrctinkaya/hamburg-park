@@ -1,6 +1,6 @@
 (()=>{
 const css=`
-.permit.permit-compact{padding:12px 14px}.permit.permit-compact .copy,.permit.permit-compact .permit-row,.permit.permit-compact .saved{display:none!important}.permit-summary{display:none;align-items:center;justify-content:space-between;gap:12px}.permit.permit-compact .permit-summary{display:flex}.permit-summary-main{min-width:0}.permit-summary-label{font-size:10px;color:var(--muted);font-weight:750}.permit-summary-code{font-size:18px;font-weight:900;margin-top:2px}.permit-change{border:0;border-radius:11px;padding:9px 12px;background:var(--surface2);color:var(--text);font-size:11px;font-weight:850;cursor:pointer}.accuracy.accuracy-poor{color:var(--warning);background:var(--warningBg);box-shadow:inset 0 0 0 1px #fed7aa}.accuracy-note{margin-top:8px;color:var(--warning);font-size:10px;font-weight:700}.live{color:var(--muted)!important;font-size:11px!important;opacity:.78}.live-dot{width:7px!important;height:7px!important;background:var(--muted)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--muted) 10%,transparent)!important}.result-card .zone{display:none}.result-card .zone-name{font-size:28px;line-height:1.05;font-weight:950;letter-spacing:-.6px;margin-top:6px}.permit-verdict.low-accuracy{color:var(--warning);background:var(--warningBg)}.permit-verdict{padding:12px 14px!important;gap:2px!important}.permit-verdict strong{margin-bottom:1px!important}.legend{display:none}.footer-meta #dataMeta,.footer-meta #version{display:none}.footer-meta br{display:none}.sheet:not(.open),.sheet-bg:not(.open){pointer-events:none}
+.permit.permit-compact{padding:12px 14px}.permit.permit-compact .copy,.permit.permit-compact .permit-row,.permit.permit-compact .saved{display:none!important}.permit-summary{display:none;align-items:center;justify-content:space-between;gap:12px}.permit.permit-compact .permit-summary{display:flex}.permit-summary-main{min-width:0}.permit-summary-code{font-size:18px;font-weight:900;margin-top:2px}.permit-change{border:0;border-radius:11px;padding:9px 12px;background:var(--surface2);color:var(--text);font-size:11px;font-weight:850;cursor:pointer}.accuracy.accuracy-poor{color:var(--warning);background:var(--warningBg);box-shadow:inset 0 0 0 1px #fed7aa}.accuracy-note{margin-top:8px;color:var(--warning);font-size:10px;font-weight:700}.live{color:var(--muted)!important;font-size:11px!important;opacity:.78}.live-dot{width:7px!important;height:7px!important;background:var(--muted)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--muted) 10%,transparent)!important}.result-card .zone{display:none}.result-card .zone-name{font-size:28px;line-height:1.05;font-weight:950;letter-spacing:-.6px;margin-top:6px}.permit-verdict.low-accuracy{color:var(--warning);background:var(--warningBg)}.permit-verdict{padding:12px 14px!important;gap:2px!important}.permit-verdict strong{margin-bottom:1px!important}.legend{display:none}.footer-meta #dataMeta,.footer-meta #version{display:none}.footer-meta br{display:none}.sheet:not(.open),.sheet-bg:not(.open){pointer-events:none}
 @media(max-width:520px){.compact-details{grid-template-columns:1fr}.detail-chip-value{font-size:12px;line-height:1.35}.result-card .zone-name{font-size:25px}.permit-verdict{padding:11px 13px!important}}
 `;
 const style=document.createElement('style');style.textContent=css;document.head.appendChild(style);
@@ -14,11 +14,41 @@ function savedCode(){return (localStorage.getItem('hamburgParkPermit')||'').trim
 function setText(el,value){if(el&&el.textContent!==value)el.textContent=value}
 function permitDisplay(c){if(!c)return '';try{const f=(typeof features!=='undefined'?features:[]).find(x=>String(x.properties?.bwp_code||'').replace(/\s+/g,'').toUpperCase()===c.replace(/\s+/g,''));const raw=String(f?.properties?.bwp_name||'').trim();return raw||c}catch{return c}}
 function updatePermit(){const l=currentLang(),c=savedCode(),tx=texts[l]||texts.de;setText(label,tx.label);setText(change,tx.change);setText(codeEl,permitDisplay(c));permit.classList.toggle('permit-compact',Boolean(c&&!editing))}
-change.addEventListener('click',()=>{editing=true;permit.classList.remove('permit-compact');input.value=savedCode();setTimeout(()=>{input.focus();input.select()},0)});
+
+// When editing an existing permit, opening the field must show the full official zone list,
+// not a list filtered down to the already-saved code.
+function openFullPermitList(){
+  if(typeof features==='undefined'||!features.length)return false;
+  const current=input.value;
+  input.value='';
+  if(typeof showSuggestions==='function')showSuggestions();
+  input.value=current;
+  return true;
+}
+
+change.addEventListener('click',()=>{
+  editing=true;
+  permit.classList.remove('permit-compact');
+  input.value=savedCode();
+  setTimeout(()=>{
+    input.focus();
+    input.select();
+    openFullPermitList();
+  },0);
+});
+
+// Tapping/focusing the permit field should initially expose all zones. Typing still uses
+// the core input handler to filter the list normally.
+input.addEventListener('focus',()=>{
+  requestAnimationFrame(()=>{
+    if(document.activeElement===input)openFullPermitList();
+  });
+});
+
 document.getElementById('save')?.addEventListener('click',()=>setTimeout(()=>{if(savedCode()){editing=false;updatePermit()}},0));
 document.getElementById('lang')?.addEventListener('change',()=>setTimeout(()=>{updatePermit();updateAccuracy()},0));
 function updateAccuracy(){const badge=document.querySelector('.accuracy');if(!badge)return;const m=(badge.textContent||'').match(/±\s*(\d+)/);const acc=m?Number(m[1]):0;const poor=acc>30;badge.classList.toggle('accuracy-poor',poor);const card=badge.closest('.result-card');if(!card)return;let note=card.querySelector('.accuracy-note');const tx=texts[currentLang()]||texts.de;if(poor){if(!note){note=document.createElement('div');note.className='accuracy-note';card.querySelector('.result-top')?.insertAdjacentElement('afterend',note)}setText(note,`${tx.poor} (±${acc} m)`);const verdict=card.querySelector('.permit-verdict');if(verdict){verdict.classList.remove('ok','error','neutral');verdict.classList.add('low-accuracy');verdict.innerHTML=`<strong>${tx.wait}</strong>${tx.waitBody}`}}else if(note){note.remove()}}
-function refreshCurrentPositionAgainstData(){if(dataReadyHandled||typeof features==='undefined'||!features.length)return false;dataReadyHandled=true;updatePermit();if(typeof last!=='undefined'&&last&&Number.isFinite(last.lat)&&Number.isFinite(last.lon)){last.matches=features.filter(f=>contains(f,[last.lon,last.lat]));render(last,false)}return true}
+function refreshCurrentPositionAgainstData(){if(dataReadyHandled||typeof features==='undefined'||!features.length)return false;dataReadyHandled=true;updatePermit();if(typeof last!=='undefined'&&last&&Number.isFinite(last.lat)&&Number.isFinite(last.lon)){last.matches=features.filter(f=>contains(f,[last.lon,last.lat]));render(last,false)}if(document.activeElement===input)openFullPermitList();return true}
 if(localStorage.getItem('hamburgParkLocationApproved')==='1'&&typeof startWatch==='function'&&typeof watchId!=='undefined'&&watchId==null){startWatch()}
 let readyChecks=0;const readyTimer=setInterval(()=>{if(refreshCurrentPositionAgainstData()||++readyChecks>200)clearInterval(readyTimer)},50);
 let scheduled=false;function polish(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;updatePermit();updateAccuracy()})}
